@@ -1,0 +1,23 @@
+name: Compile and Run arena.h tests
+on: [push, pull_request]
+
+jobs:
+  windows:
+    strategy:
+      matrix:
+        cc: [gcc, clang]
+    runs-on: windows-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+      - name: Install Dependencies
+        run: choco install -y llvm mingw
+      - name: Compile arena tests
+        run: ${{ matrix.cc }} -O2 -std=c89 -pedantic -Wall -Wextra -Werror -Wvla -Wconversion -Wdouble-promotion -Wno-sign-conversion -Wuninitialized -Winit-self -Wunused -Wunused-macros -Wunused-local-typedefs -o arena_test_${{ matrix.cc }}.exe tests/arena_test.c
+      - name: Run arena tests
+        run: .\arena_test_${{ matrix.cc }}.exe
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-latest-${{ matrix.cc }}-arena_test
+          path: arena_test_${{ matrix.cc }}.exe
