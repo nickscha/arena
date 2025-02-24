@@ -111,18 +111,23 @@ static void (*deallocator_default)(void *) = arena_free_win32;
 #elif defined(__linux__) || defined(__APPLE__)
 
 #include <sys/mman.h>
+#include <unistd.h>
 
 static ARENA_INLINE void *arena_malloc_linux(unsigned long size)
 {
-    void *ptr = mmap(ARENA_NULL, size, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
-    return (ptr == MAP_FAILED) ? ARENA_NULL : ptr;
+    return mmap(ARENA_NULL, size, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
 }
 
 static ARENA_INLINE void arena_free_linux(void *ptr)
 {
     if (ptr)
     {
-        munmap(ptr, ((unsigned long)ptr & ~(4096 - 1)));
+        long page_size = sysconf(_SC_PAGESIZE);
+        if (page_size <= 0)
+        {
+            page_size = 4096; /* Fallback to 4KB if sysconf fails */
+        }
+        munmap(ptr, (size + page_size - 1) & ~(page_size - 1));
     }
 }
 
