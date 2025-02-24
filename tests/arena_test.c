@@ -19,83 +19,83 @@ LICENSE
 
 int main(void)
 {
-    int i;
-    int *arr;
+  int i;
+  int *arr;
 
-    arena arena = {0};
-    arena_init(&arena, 1024 * 1024 * 10); /* 1 MB*/
+  arena arena = {0};
+  arena_init(&arena, 1024 * 1024 * 10); /* 1 MB*/
 
-    arr = (int *)arena_malloc(&arena, NUM_ELEMENTS * sizeof(int));
-    if (!arr)
-    {
-        TEST_FUNCTION_PRINTF("%s\n", "Memory allocation failed!");
-        return 1;
-    }
+  arr = (int *)arena_malloc(&arena, NUM_ELEMENTS * sizeof(int));
+  if (!arr)
+  {
+    TEST_FUNCTION_PRINTF("%s\n", "Memory allocation failed!");
+    return 1;
+  }
 
-    for (i = 0; i < NUM_ELEMENTS; ++i)
-    {
-        arr[i] = i;
-    }
+  for (i = 0; i < NUM_ELEMENTS; ++i)
+  {
+    arr[i] = i;
+  }
 
-    assert(arena_stats_realloc_move_mem == 0);
-    assert(arena.offset == 48);
-    assert(arena.offset_last == 0);
+  assert(arena_stats_realloc_move_mem == 0);
+  assert(arena.offset == 48);
+  assert(arena.offset_last == 0);
 
-    arr = arena_realloc(&arena, arr, 13 * sizeof(int));
+  arr = arena_realloc(&arena, arr, 13 * sizeof(int));
 
-    assert(arena_stats_realloc_move_mem == 0);
-    assert(arena.offset == 64);
-    assert(arena.offset_last == 48);
+  assert(arena_stats_realloc_move_mem == 0);
+  assert(arena.offset == 64);
+  assert(arena.offset_last == 48);
 
-    if (!((float *)arena_malloc(&arena, 3000 * sizeof(float))))
-    {
-        TEST_FUNCTION_PRINTF("%s\n", "Memory allocation failed!");
-        return 1;
-    }
+  if (!((float *)arena_malloc(&arena, 3000 * sizeof(float))))
+  {
+    TEST_FUNCTION_PRINTF("%s\n", "Memory allocation failed!");
+    return 1;
+  }
 
-    assert(arena.offset == 12064);
-    assert(arena.offset_last == 64);
+  assert(arena.offset == 12064);
+  assert(arena.offset_last == 64);
 
-    arr = arena_realloc(&arena, arr, 20 * sizeof(int));
+  arr = arena_realloc(&arena, arr, 20 * sizeof(int));
 
-    /* 
-      We have to move memory since after int *arr another type allocation was done
-    */
-    assert(arena_stats_realloc_move_mem == 1);
+  /*
+    We have to move memory since after int *arr another type allocation was done
+  */
+  assert(arena_stats_realloc_move_mem == 1);
 
-    for (i = 0; i < NUM_ELEMENTS; ++i)
-    {
-        arr[i] = i;
-    }
+  for (i = 0; i < NUM_ELEMENTS; ++i)
+  {
+    arr[i] = i;
+  }
 
-    assert(arena.offset == 12144);
+  assert(arena.offset == 12144);
 
-    arr = arena_realloc(&arena, arr, 40 * sizeof(int));
+  arr = arena_realloc(&arena, arr, 40 * sizeof(int));
 
-    /*
-      Since we are just extending the memory of the last allocation
-      we do not need move memory and just offsetting the arena pointer
-    */
-    assert(arena_stats_realloc_move_mem == 1);
+  /*
+    Since we are just extending the memory of the last allocation
+    we do not need move memory and just offsetting the arena pointer
+  */
+  assert(arena_stats_realloc_move_mem == 1);
 
-    assert(arena_stats_init == 1);
-    assert(arena_stats_malloc == 3);
-    assert(arena_stats_realloc == 3);
-    assert(arena_stats_resetf == 0);
-    assert(arena_stats_free == 0);
-    assert(arena.offset == 12224);
-    assert(arena.offset_last == 12144);
-    assert(arena.size == 10485760);
+  assert(arena_stats_init == 1);
+  assert(arena_stats_malloc == 3);
+  assert(arena_stats_realloc == 3);
+  assert(arena_stats_resetf == 0);
+  assert(arena_stats_free == 0);
+  assert(arena.offset == 12224);
+  assert(arena.offset_last == 12144);
+  assert(arena.size == 10485760);
 
-    arena_reset(&arena);
+  arena_reset(&arena);
 
-    assert(arena_stats_resetf == 1);
+  assert(arena_stats_resetf == 1);
 
-    arena_free(&arena);
+  arena_free(&arena);
 
-    assert(arena_stats_free == 1);
+  assert(arena_stats_free == 1);
 
-    return 0;
+  return 0;
 }
 
 /*

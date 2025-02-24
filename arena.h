@@ -54,17 +54,6 @@ LICENSE
 #define ARENA_INLINE
 #endif
 
-#ifdef _WIN32
-/* Windows prototypes since include windows.h is immensily slow !!! */
-#define MEM_COMMIT 0x00001000
-#define MEM_RESERVE 0x00002000
-#define MEM_RELEASE 0x00008000
-#define PAGE_READWRITE 0x04
-void *VirtualAlloc(void *lpAddress, unsigned long dwSize, unsigned long flAllocationType, unsigned long flProtect);
-int VirtualFree(void *lpAddress, unsigned long dwSize, unsigned long dwFreeType);
-void RtlMoveMemory(void *Destination, const void *Source, unsigned long Length);
-#endif
-
 #define ARENA_NULL ((void *)0)
 
 #ifndef ARENA_ALIGNMENT
@@ -97,12 +86,79 @@ ARENA_INLINE void arena_stats_reset(void)
 #define ARENA_STATS(x)
 #endif
 
+#ifdef _WIN32
+/* Windows prototypes since include windows.h is immensily slow !!! */
+#define MEM_COMMIT 0x00001000
+#define MEM_RESERVE 0x00002000
+#define MEM_RELEASE 0x00008000
+#define PAGE_READWRITE 0x04
+void *VirtualAlloc(void *lpAddress, unsigned long dwSize, unsigned long flAllocationType, unsigned long flProtect);
+int VirtualFree(void *lpAddress, unsigned long dwSize, unsigned long dwFreeType);
+
+static ARENA_INLINE void *arena_malloc_win32(unsigned long size)
+{
+    return VirtualAlloc(ARENA_NULL, size, MEM_RESERVE | MEM_COMMIT, PAGE_READWRITE);
+}
+
+static ARENA_INLINE void arena_free_win32(void *ptr)
+{
+    VirtualFree(ptr, 0, MEM_RELEASE);
+}
+
+static void *(*allocator_default)(unsigned long) = arena_malloc_win32;
+static void (*deallocator_default)(void *) = arena_free_win32;
+
+#elif defined(__linux__) || defined(__APPLE__)
+
+#include <sys/mman.h>
+#include <unistd.h>
+
+static ARENA_INLINE void *arena_malloc_linux(unsigned long size)
+{
+    void *ptr = mmap(NULL, size, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
+    return (ptr == MAP_FAILED) ? NULL : ptr;
+}
+
+static ARENA_INLINE void arena_free_linux(void *ptr)
+{
+    if (ptr)
+    {
+        munmap(ptr, ((unsigned long)ptr & ~(getpagesize() - 1)));
+    }
+}
+
+static void *(*allocator_default)(unsigned long) = arena_malloc_linux;
+static void (*deallocator_default)(void *) = arena_free_linux;
+
+#else
+
+/* Fallback to C standard library for unsupported platforms */
+#include <stdlib.h>
+
+static ARENA_INLINE void *arena_malloc_stdlib(unsigned long size)
+{
+    return malloc(size);
+}
+
+static ARENA_INLINE void arena_free_stdlib(void *ptr)
+{
+    free(ptr);
+}
+
+/* Declare function pointers for fallback */
+static void *(*allocator_default)(unsigned long) = arena_malloc_stdlib;
+static void (*deallocator_default)(void *) = arena_fallback_free;
+
+#endif
+
 typedef struct arena
 {
     char *base;
     unsigned long offset;
     unsigned long offset_last;
     unsigned long size;
+    void *(*allocator)(unsigned long); /* Custom malloc implementation */
+    void (*deallocator)(void *);       /* Custom free implementation */
 } arena;
 
 static ARENA_INLINE int arena_init(arena *arena, unsigned long size)
@@ -111,7 +167,17 @@ static ARENA_INLINE int arena_init(arena *arena, unsigned long size)
 
     if (!arena->base)
     {
-        arena->base = (char *)VirtualAlloc(ARENA_NULL, size, MEM_RESERVE | MEM_COMMIT, PAGE_READWRITE);
+        if (!arena->allocator)
+        {
+            arena->allocator = allocator_default;
+        }
+        if (!arena->deallocator)
+        {
+            arena->deallocator = deallocator_default;
+        }
+
+        arena->base = (char *)arena->allocator(size);
+
         if (!arena->base)
         {
             return 0;
@@ -141,6 +207,37 @@ static ARENA_INLINE void *arena_malloc(arena *arena, unsigned long size)
     arena->offset += _ptr ? _size : 0;
 
     return (_ptr);
+}
+
+static ARENA_INLINE void *arena_memcpy(void *dest, const void *src, unsigned long n)
+{
+    unsigned char *d = dest;
+    const unsigned char *s = src;
+    unsigned long i;
+    unsigned long chunk_count;
+    unsigned long remaining_bytes;
+
+    if (d == s)
+    {
+        return dest;
+    }
+
+    chunk_count = n / sizeof(unsigned long);
+    for (i = 0; i < chunk_count; i++)
+    {
+        *((unsigned long *)(d + i * sizeof(unsigned long))) = *((const unsigned long *)(s + i * sizeof(unsigned long)));
+    }
+
+    remaining_bytes = n % sizeof(unsigned long);
+    if (remaining_bytes > 0)
+    {
+        for (i = 0; i < remaining_bytes; i++)
+        {
+            d[chunk_count * sizeof(unsigned long) + i] = s[chunk_count * sizeof(unsigned long) + i];
+        }
+    }
+
+    return dest;
 }
 
 static ARENA_INLINE void *arena_realloc(arena *arena, void *ptr, unsigned long new_size)
@@ -177,7 +274,7 @@ static ARENA_INLINE void *arena_realloc(arena *arena, void *ptr, unsigned long n
     if (new_ptr)
     {
         ARENA_STATS(++arena_stats_realloc_move_mem);
-        RtlMoveMemory(new_ptr, ptr, new_size);
+        arena_memcpy(new_ptr, cptr, new_size);
     }
     return (new_ptr);
 }
@@ -195,7 +292,7 @@ static ARENA_INLINE void arena_free(arena *arena)
     {
         ARENA_STATS(++arena_stats_free);
 
-        VirtualFree(arena->base, 0, MEM_RELEASE);
+        arena->deallocator(arena->base);
         arena->base = (char *)ARENA_NULL;
         arena->offset = 0;
         arena->offset_last = 0;
