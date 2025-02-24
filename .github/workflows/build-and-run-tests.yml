@@ -13,7 +13,7 @@ jobs:
       - name: Install Dependencies
         run: sudo apt update && sudo apt install -y ${{ matrix.cc }}
       - name: Compile arena tests
-        run: ${{ matrix.cc }} -O2 -std=c89 -pedantic -Wall -Wextra -Werror -Wvla -Wconversion -Wdouble-promotion -Wno-sign-conversion -Wuninitialized -Winit-self -Wunused -Wunused-macros -Wunused-local-typedefs -o arena_test_${{ matrix.cc }} tests/arena_test.c
+        run: ${{ matrix.cc }} -O2 -std=c89 -pedantic -Wall -Wextra -Werror -Wvla -Wno-conversion -Wdouble-promotion -Wno-sign-conversion -Wuninitialized -Winit-self -Wunused -Wunused-macros -Wunused-local-typedefs -o arena_test_${{ matrix.cc }} tests/arena_test.c
       - name: Run arena tests
         run: ./arena_test_${{ matrix.cc }}
       - name: Upload Artifact
@@ -30,7 +30,7 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v4
       - name: Compile arena tests
-        run: ${{ matrix.cc }} -O2 -std=c89 -pedantic -Wall -Wextra -Werror -Wvla -Wconversion -Wdouble-promotion -Wno-sign-conversion -Wuninitialized -Winit-self -Wunused -Wunused-macros -Wunused-local-typedefs -o arena_test_${{ matrix.cc }} tests/arena_test.c
+        run: ${{ matrix.cc }} -O2 -std=c89 -pedantic -Wall -Wextra -Werror -Wvla -Wno-conversion -Wdouble-promotion -Wno-sign-conversion -Wuninitialized -Winit-self -Wunused -Wunused-macros -Wunused-local-typedefs -o arena_test_${{ matrix.cc }} tests/arena_test.c
       - name: Run arena tests
         run: ./arena_test_${{ matrix.cc }}
       - name: Upload Artifact

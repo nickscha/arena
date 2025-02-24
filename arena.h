@@ -111,7 +111,6 @@ static void (*deallocator_default)(void *) = arena_free_win32;
 #elif defined(__linux__) || defined(__APPLE__)
 
 #include <sys/mman.h>
-#include <unistd.h>
 
 static ARENA_INLINE void *arena_malloc_linux(unsigned long size)
 {
@@ -123,7 +122,7 @@ static ARENA_INLINE void arena_free_linux(void *ptr)
 {
     if (ptr)
     {
-        munmap(ptr, ((unsigned long)ptr & ~(getpagesize() - 1)));
+        munmap(ptr, ((unsigned long)ptr & ~(4096 - 1)));
     }
 }
 
