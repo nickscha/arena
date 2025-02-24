@@ -127,7 +127,7 @@ static ARENA_INLINE void arena_free_linux(void *ptr)
         {
             page_size = 4096; /* Fallback to 4KB if sysconf fails */
         }
-        munmap(ptr, (size + page_size - 1) & ~(page_size - 1));
+        munmap(ptr, ((unsigned long)ptr & ~(page_size - 1)));
     }
 }
 
