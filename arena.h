@@ -151,7 +151,7 @@ static ARENA_INLINE void arena_free_stdlib(void *ptr)
 
 /* Declare function pointers for fallback */
 static void *(*allocator_default)(unsigned long) = arena_malloc_stdlib;
-static void (*deallocator_default)(void *) = arena_fallback_free;
+static void (*deallocator_default)(void *) = arena_free_stdlib;
 
 #endif
 
