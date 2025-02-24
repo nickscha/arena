@@ -114,8 +114,8 @@ static void (*deallocator_default)(void *) = arena_free_win32;
 
 static ARENA_INLINE void *arena_malloc_linux(unsigned long size)
 {
-    void *ptr = mmap(NULL, size, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
-    return (ptr == MAP_FAILED) ? NULL : ptr;
+    void *ptr = mmap(ARENA_NULL, size, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
+    return (ptr == MAP_FAILED) ? ARENA_NULL : ptr;
 }
 
 static ARENA_INLINE void arena_free_linux(void *ptr)
