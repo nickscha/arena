@@ -241,7 +241,7 @@ static ARENA_INLINE void *arena_memcpy(void *dest, const void *src, unsigned lon
         }
     }
 
-    return dest;
+    return (dest);
 }
 
 static ARENA_INLINE void *arena_realloc(arena *arena, void *ptr, unsigned long new_size)
