@@ -96,8 +96,11 @@ ARENA_API ARENA_INLINE void arena_stats_reset(void)
 #define MEM_RESERVE 0x00002000
 #define MEM_RELEASE 0x00008000
 #define PAGE_READWRITE 0x04
+
+#ifndef _WINDOWS_
 void *VirtualAlloc(void *lpAddress, unsigned long dwSize, unsigned long flAllocationType, unsigned long flProtect);
 int VirtualFree(void *lpAddress, unsigned long dwSize, unsigned long dwFreeType);
+#endif
 
 ARENA_API ARENA_INLINE void *arena_malloc_win32(unsigned long size)
 {
