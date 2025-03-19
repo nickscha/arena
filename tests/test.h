@@ -55,8 +55,10 @@ static test_state test_state_global = {0};
 
 #ifdef _WIN32
 
+#ifndef _WINDOWS_
 void *GetStdHandle(unsigned long nStdHandle);
 int SetConsoleTextAttribute(void *hConsoleOutput, unsigned short wAttributes);
+#endif
 
 #define COLOR_DEFAULT 7
 #define COLOR_BLUE 9
