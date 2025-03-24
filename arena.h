@@ -191,13 +191,13 @@ ARENA_API ARENA_INLINE int arena_init(arena *arena, unsigned long size)
 
         if (!arena->base)
         {
-            return 0;
+            return (0);
         }
         arena->size = size;
         arena->offset = 0;
         arena->offset_last = 0;
     }
-    return 1;
+    return (1);
 }
 
 ARENA_API ARENA_INLINE void *arena_malloc(arena *arena, unsigned long size)
@@ -230,7 +230,7 @@ ARENA_API ARENA_INLINE void *arena_memcpy(void *dest, const void *src, unsigned 
 
     if (d == s)
     {
-        return dest;
+        return (dest);
     }
 
     chunk_count = n / sizeof(unsigned long);
@@ -262,7 +262,7 @@ ARENA_API ARENA_INLINE void *arena_realloc(arena *arena, void *ptr, unsigned lon
 
     if (!ptr)
     {
-        return arena_malloc(arena, new_size);
+        return (arena_malloc(arena, new_size));
     }
 
     cptr = (char *)ptr;
@@ -276,7 +276,7 @@ ARENA_API ARENA_INLINE void *arena_realloc(arena *arena, void *ptr, unsigned lon
         {
             arena->offset_last = arena->offset;
             arena->offset += (new_size - old_size);
-            return ptr;
+            return (ptr);
         }
     }
 
