@@ -207,7 +207,7 @@ ARENA_API ARENA_INLINE void *arena_malloc(arena *arena, unsigned long size)
 
     if (arena->offset + _size > arena->size)
     {
-        return ARENA_NULL; /* Out of memory */
+        return (ARENA_NULL); /* Out of memory */
     }
 
     _ptr = arena->base + arena->offset;
