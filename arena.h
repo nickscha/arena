@@ -115,7 +115,7 @@ ARENA_API ARENA_INLINE void arena_free_win32(void *ptr)
 ARENA_API void *(*allocator_default)(unsigned long) = arena_malloc_win32;
 ARENA_API void (*deallocator_default)(void *) = arena_free_win32;
 
-#elif defined(__linux__) || defined(__APPLE__)
+#elif defined(__linux__)
 
 #include <sys/mman.h>
 #include <unistd.h>
