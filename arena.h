@@ -123,7 +123,7 @@ ARENA_API void (*deallocator_default)(void *) = arena_free_win32;
 ARENA_API ARENA_INLINE void *arena_malloc_linux(unsigned long size)
 {
     return mmap(ARENA_NULL, size, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
-}
+}   
 
 ARENA_API ARENA_INLINE void arena_free_linux(void *ptr)
 {
@@ -271,11 +271,12 @@ ARENA_API ARENA_INLINE void *arena_realloc(arena *arena, void *ptr, unsigned lon
     if (cptr == arena->base + arena->offset_last)
     {
         unsigned long old_size = arena->offset - arena->offset_last;
+        unsigned long diff_size = (new_size - old_size);
 
-        if (arena->offset + (new_size - old_size) <= arena->size)
+        if (arena->offset + diff_size <= arena->size)
         {
             arena->offset_last = arena->offset;
-            arena->offset += (new_size - old_size);
+            arena->offset += diff_size;
             return (ptr);
         }
     }
