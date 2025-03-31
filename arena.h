@@ -115,15 +115,21 @@ ARENA_API ARENA_INLINE void arena_free_win32(void *ptr)
 ARENA_API void *(*allocator_default)(unsigned long) = arena_malloc_win32;
 ARENA_API void (*deallocator_default)(void *) = arena_free_win32;
 
-#elif defined(__linux__)
+#elif defined(__linux__) || defined(__APPLE__)
 
 #include <sys/mman.h>
 #include <unistd.h>
 
 ARENA_API ARENA_INLINE void *arena_malloc_linux(unsigned long size)
 {
-    return mmap(ARENA_NULL, size, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
-}   
+    long page_size = sysconf(_SC_PAGESIZE);
+    if (page_size <= 0)
+    {
+        page_size = 4096; /* Fallback to 4KB if sysconf fails */
+    }
+
+    return mmap(ARENA_NULL, ((size + page_size - 1) / page_size) * page_size, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
+}
 
 ARENA_API ARENA_INLINE void arena_free_linux(void *ptr)
 {
@@ -134,6 +140,7 @@ ARENA_API ARENA_INLINE void arena_free_linux(void *ptr)
         {
             page_size = 4096; /* Fallback to 4KB if sysconf fails */
         }
+
         munmap(ptr, ((unsigned long)ptr & ~(page_size - 1)));
     }
 }
