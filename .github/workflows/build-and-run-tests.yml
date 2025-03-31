@@ -25,7 +25,8 @@ jobs:
     strategy:
       matrix:
         cc: [clang]
-    runs-on: macos-latest
+        os: [macos-latest, macos-13]
+    runs-on: ${{ matrix.os }}
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
@@ -36,7 +37,7 @@ jobs:
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: macos-latest-${{ matrix.cc }}-arena_test
+          name: ${{ matrix.os }}-${{ matrix.cc }}-arena_test
           path: arena_test_${{ matrix.cc }}
   windows:
     strategy:
