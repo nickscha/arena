@@ -23,7 +23,7 @@ COMPILE-TIME OPTIONS
     arena_stats_realloc;
     arena_stats_realloc_move_mem;
     arena_stats_resetf;
-    rena_stats_free;
+    arena_stats_free;
 
     Example:
     #define ARENA_COLLECT_STATISTICS
